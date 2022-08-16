@@ -1,82 +1,60 @@
-import React from 'react';
-import {Text,StyleSheet, TouchableOpacity,View} from 'react-native'
-import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import { Input, NativeBaseProvider, Image } from 'native-base';
+import React, {useEffect, useState} from 'react';
+import {Text,View, StyleSheet, FlatList} from 'react-native'
+import * as Contacts from 'expo-contacts';
 
-//? Icons
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+function AddContacto(){
 
-//todo Main
-function Home (){ 
+  const [contactos,setContactos] = useState()
 
+  useEffect(() => {
+    (async () => {
+      const { status } = await Contacts.requestPermissionsAsync();
+      if (status === 'granted') {
+        const { data } = await Contacts.getContactsAsync({
+          fields: [Contacts.Fields.PhoneNumbers],
+        });
 
-  return(
+        if (data.length > 0) {
+          setContactos(data)
+        }
+      }
+    })();
+  }, []);
+
+  return (
     <View style={styles.container}>
-      <View style={styles.card}>
-        <View
-          style={styles.cardHeader}
-        >
-          <Text style={styles.titleHeader}>Contactos de confianza</Text>
-        </View>
-        <View style={styles.cardBody}> 
-          <View style={styles.cardLeft}>
-            <Text>Elementos</Text>
-          </View>
-          <View style={styles.cardRight}>
-            <Text style={styles.cardText}><MaterialCommunityIcons name="account-plus" size={15} color="green" /> Agregar</Text>
-            <Text style={styles.cardText}><MaterialCommunityIcons name="account-minus" size={15} color="red" /> Eliminar</Text>
-          </View>
-        </View>
-      </View>
+
+      <FlatList 
+        style={styles.listaContacts}
+        data={contactos}
+        keyExtractor={item=>item.id}
+        renderItem={({item})=>{
+          return (
+            
+            <View style={{borderBottomWidth: 2}}>
+              <Text style={{fontSize:20, fontWeight: 'bold'}}>{item.name}</Text>
+              <Text style={{fontSize:17}}>{item.phoneNumbers && item.phoneNumbers[0] && item.phoneNumbers[0].number}</Text>
+            </View>
+          )
+        }}
+      />
     </View>
-  )
+  );
 }
 
-export default () => {
-  return ( 
-    <NativeBaseProvider>
-            <Home />
-    </NativeBaseProvider>
-  )
-}
+export default AddContacto
+
+//! Styles
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor:'purple',
-    flex: 1, // Permite sobreposicioar elementos
+
   },
-  card: {
-    backgroundColor:'#C496F5',
-    marginTop:'20%',
-    width:'90%',
-    height: 150,
-    alignSelf: 'center',
-    borderRadius: 20,
+  listaContacts: {
+    backgroundColor: '#f9c2ff',
+    width:'100%',
+    padding: 20,
+    marginTop: 50,
+    borderBottomColor: '#FDFDFD',
   },
-  cardHeader: {
-    backgroundColor:'#f1f1f1',
-    alignItems: 'center',
-    borderTopLeftRadius:20,
-    borderTopRightRadius:20,
-    marginTop: 0,
-  },
-  titleHeader: {
-    fontSize: 25,
-  },
-  cardBody: {
-    padding: 5,
-    flexDirection: 'row',
-  },
-  cardLeft: {
-    // backgroundColor:'red',
-    width:'70%',
-  },
-  cardRight: {
-    padding: 5,
-    // backgroundColor:'yellow',
-    width:'30%',
-  },
-  cardText: {
-    color:'#fff',
-  }
 })

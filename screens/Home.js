@@ -1,7 +1,8 @@
-import React from 'react';
+import React, {useEffect,useState} from 'react';
 import {Text,StyleSheet, TouchableOpacity,View} from 'react-native'
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 //? Icons
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -9,6 +10,19 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 //todo Main
 function Home (){ 
 
+  const getData = async (key) => {
+    try {
+      const jsonValue = await AsyncStorage.getItem(key)
+      return jsonValue != null ? JSON.parse(jsonValue) : null;
+    } catch (error) {
+      alert('Error: ' + error.message);
+    }
+  }
+
+  useEffect(() => {
+  
+  })
+  
   const Navigator = useNavigation()
 
   return(
@@ -21,7 +35,9 @@ function Home (){
         </View>
         <View style={styles.cardBody}> 
           <View style={styles.cardLeft}>
-            <Text>Elementos</Text>
+            <View>
+              <View><Text>{ getData('contacto1').name}</Text></View>
+            </View>
           </View>
           <View style={styles.cardRight}>
             <Text style={styles.cardText} onPress={() => Navigator.navigate('addContacto')}><MaterialCommunityIcons name="account-plus" size={20} color="green" /> Agregar</Text>
@@ -29,7 +45,7 @@ function Home (){
           </View>
         </View>
       </View>
-    </View>
+    </View> 
   )
 }
 
