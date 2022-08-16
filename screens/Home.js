@@ -10,36 +10,52 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 //todo Main
 function Home (){ 
 
+  const [contacto1, setContacto1] = useState()
   const getData = async (key) => {
+      try { 
+        let data = await AsyncStorage.getItem("contacto1")
+        setContacto1(JSON.parse(data))
+      } catch (error) {
+         
+      }
+  }
+  const removeItem = async () => {
     try {
-      const jsonValue = await AsyncStorage.getItem(key)
-      return jsonValue != null ? JSON.parse(jsonValue) : null;
+      await AsyncStorage.removeItem("contacto1")
     } catch (error) {
-      alert('Error: ' + error.message);
+      
     }
   }
 
   useEffect(() => {
-  
+    // removeItem()
+    getData()
   })
   
   const Navigator = useNavigation()
 
-  return(
+  return(   
     <View style={styles.container}>
       <View style={styles.card}>
         <View
           style={styles.cardHeader}
         >
           <Text style={styles.titleHeader}>Contactos de confianza</Text>
-        </View>
+        </View> 
         <View style={styles.cardBody}> 
           <View style={styles.cardLeft}>
-            <View>
-              <View><Text>{ getData('contacto1').name}</Text></View>
+            <View style={styles.contentContact}>
+              {/* <View style={styles.cardContact}>
+                <View style={styles.circleContact}><Text style={styles.textCircle}>{contacto1.name[0]}</Text></View>
+                <Text style={styles.nameContact}>{contacto1.name}</Text>
+              </View>
+              <View style={styles.cardContact}>
+                <View style={styles.circleContact}><Text style={styles.textCircle}>{contacto1.name[0]}</Text></View>
+                <Text style={styles.nameContact}>{contacto1.name}</Text>
+              </View> */}
             </View>
           </View>
-          <View style={styles.cardRight}>
+          <View style={styles.cardRight}> 
             <Text style={styles.cardText} onPress={() => Navigator.navigate('addContacto')}><MaterialCommunityIcons name="account-plus" size={20} color="green" /> Agregar</Text>
             <Text style={styles.cardText}><MaterialCommunityIcons name="account-minus" size={20} color="red" /> Eliminar</Text>
           </View>
@@ -52,6 +68,28 @@ function Home (){
 export default Home
 
 const styles = StyleSheet.create({
+  contentContact: {
+    flexDirection: 'row',
+    padding: 5,
+  },
+  circleContact : {
+    backgroundColor: 'blue',
+    width: 50,
+    height:50,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius:50,
+  },
+  nameContact: {
+    fontSize: 8
+  },
+  cardContact: {
+    justifyContent: 'center',
+    paddingRight:5
+  },
+  textCircle: {
+    color: '#fff',
+  },
   container: {
     backgroundColor:'purple',
     flex: 1, // Permite sobreposicioar elementos

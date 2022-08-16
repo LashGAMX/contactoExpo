@@ -6,27 +6,51 @@ import * as Contacts from 'expo-contacts';
 //? Icons
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
+function checkCountContact() {
+  
+}
+
 function AddContacto() {
   const [contactos, setContactos] = useState()
+  const [temp,setTemp] = useState()
 
-  const storeData = async (value) => {
+  const storeData = (id,name,tel) => {
     try {
-      const jsonValue = JSON.stringify(value)
-      await AsyncStorage.setItem('contacto1', jsonValue)
+      const obj = {
+        id: id,
+        name: name,
+        tel: tel,
+      }
+      let sw = false;
+      if(temp != null) {
+        for (let i = 0; i < 4; i++) {
+          if(temp[i].id == id){
+            alert("Ya esta registrado")
+          }else{
+            console.log("Else")
+          }
+        }
+      } 
+      // if(sw != true){
+        // const jsonValue = JSON.stringify(obj)
+      //   AsyncStorage.setItem('contactos', jsonValue)
+      //   alert("Contacto guardado!")
+      // }
+    
     } catch (error) {
       alert('Error: ' + error.message);
     }
-  }
-
-  const getData = async () => {
-    try {
-      const jsonValue = await AsyncStorage.getItem('contacto1')
-      // console.log(jsonValue)
-      return jsonValue != null ? JSON.parse(jsonValue) : null;
+  } 
+  const getCheckData = async (key) => {
+    try { 
+      let data = await AsyncStorage.getItem("contactos") 
+      setTemp(JSON.parse(data))
+      console.log(temp)
     } catch (error) {
-      alert('Error: ' + error.message);
+       
     }
-  }
+}
+
   useEffect(() => {
     (async () => {
       const { status } = await Contacts.requestPermissionsAsync();
@@ -36,12 +60,12 @@ function AddContacto() {
         });
 
         if (data.length > 0) {
+          // console.log(data)
           setContactos(data)
         }
       }
     })();
-
-    getData()
+    getCheckData()
   }, []);
 
   return (
@@ -62,13 +86,13 @@ function AddContacto() {
                 <View>
                   <View style={{flexDirection: 'row'}}>
                     <View style={styles.cuadro}><Text style={{fontSize:25,fontWeight: 'bold'}}>{item.name[0]}</Text></View>
-                    <View style={{width:'70%'}}>
+                    <View style={{width:'70%'}}> 
                       <Text style={{ fontSize: 20, fontWeight: 'bold',alignItems: 'center'   }}>
                         {item.name}
                       </Text>
                     </View>
                     <View>
-                      <MaterialCommunityIcons name="plus" size={30} color="green" onPress={() => storeData(item)} />
+                      <MaterialCommunityIcons name="plus" size={30} color="green" onPress={() => storeData(item.id,item.name,item.phoneNumbers[0].number)} />
                     </View>
                   </View>
                 </View>
