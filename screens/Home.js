@@ -1,41 +1,98 @@
-import React, {useEffect,useState} from 'react';
+import React, {useEffect,useState, useCallback} from 'react';
 import {Text,StyleSheet, TouchableOpacity,View} from 'react-native'
-import { NavigationContainer, useNavigation } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NavigationContainer, useFocusEffect, useNavigation } from '@react-navigation/native';
+import * as SQLite from "expo-sqlite"
+import sql from '../utils/db'
+import { Octicons } from '@expo/vector-icons';
 
 //? Icons
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+function openDatabase() {
+  if (Platform.OS === "web") {
+    return {
+      transaction: () => {
+        return {
+          executeSql: () => {},
+        };
+      },
+    };
+  }
 
+  const db = SQLite.openDatabase("db.db");
+  return db;
+}
+function cardContactos(status) {
+  const [items, setItems] = useState([]);
+
+const db = openDatabase();  
+
+useEffect(() => { 
+  obtenerDatos()
+})
+const obtenerDatos = async () => {
+  await db.transaction(async (tx) => {
+    await tx.executeSql("select * from contactos", [], (_, { rows: { _array } }) => setItems(_array) 
+    );
+  });  
+}
+const deleteData = async (id) => {
+  db.transaction(
+    (tx) => {
+      tx.executeSql(`delete from contactos where id = ?;`, [id]);
+    })
+}
+return (
+        items.map((item)=>{
+          return(
+          <View key={item.id}  style={styles.cardContact}>
+            <View style={styles.circleContact}>
+              {status ? 
+                <TouchableOpacity style={{right:-18,top:-3}}
+                  onPress={() => deleteData(item.id)}
+                  >
+                  <MaterialCommunityIcons name="close" size={24} color="#F20505" />
+                </TouchableOpacity>
+              : <Text></Text> }
+              <Octicons  style={styles.textCircle} name="person" size={30} color="black" />
+            </View>
+            <Text style={styles.nameContact}>{item.name}</Text> 
+          </View>
+          ) 
+        })
+  )
+}
 //todo Main
 function Home (){ 
+  const [std, setStd] = useState(0);
 
-  const [contacto1, setContacto1] = useState()
-  const getData = async (key) => {
-      try { 
-        let data = await AsyncStorage.getItem("contacto1")
-        setContacto1(JSON.parse(data))
-      } catch (error) {
-         
-      }
-  }
-  const removeItem = async () => {
-    try {
-      await AsyncStorage.removeItem("contacto1")
-    } catch (error) {
-      
+  function openDatabase() {
+    if (Platform.OS === "web") {
+      return {
+        transaction: () => {
+          return {
+            executeSql: () => {},
+          };
+        },
+      };
     }
-  }
-
-  useEffect(() => {
-    // removeItem()
-    getData()
-  })
   
-  const Navigator = useNavigation()
+    const db = SQLite.openDatabase("db.db");
+    return db;
+}
+const db = openDatabase();
 
+// const focusEffect = useCallback(async () => {
+//   await db.transaction(async (tx) => {
+//     await tx.executeSql("select * from contactos", [], (_, { rows: { _array } }) => setItems(_array) 
+//   );  
+//   });  
+// }, [])
+
+// useFocusEffect(focusEffect)
+  const Navigator = useNavigation()
+    
   return(   
-    <View style={styles.container}>
+    <View style={styles.container}> 
       <View style={styles.card}>
         <View
           style={styles.cardHeader}
@@ -45,19 +102,12 @@ function Home (){
         <View style={styles.cardBody}> 
           <View style={styles.cardLeft}>
             <View style={styles.contentContact}>
-              {/* <View style={styles.cardContact}>
-                <View style={styles.circleContact}><Text style={styles.textCircle}>{contacto1.name[0]}</Text></View>
-                <Text style={styles.nameContact}>{contacto1.name}</Text>
-              </View>
-              <View style={styles.cardContact}>
-                <View style={styles.circleContact}><Text style={styles.textCircle}>{contacto1.name[0]}</Text></View>
-                <Text style={styles.nameContact}>{contacto1.name}</Text>
-              </View> */}
+          {cardContactos(std)}
             </View>
           </View>
           <View style={styles.cardRight}> 
-            <Text style={styles.cardText} onPress={() => Navigator.navigate('addContacto')}><MaterialCommunityIcons name="account-plus" size={20} color="green" /> Agregar</Text>
-            <Text style={styles.cardText}><MaterialCommunityIcons name="account-minus" size={20} color="red" /> Eliminar</Text>
+            <Text style={styles.cardText} onPress={() => Navigator.navigate('addContacto')}><MaterialCommunityIcons name="account-plus" size={30} color="#22A62B" /> Agregar</Text>
+            <Text style={styles.cardText} onPress={() => std ? setStd(0) : setStd(1)}><MaterialCommunityIcons name="account-minus" size={30} color="#F20505" /> Eliminar</Text>
           </View>
         </View>
       </View>
@@ -73,22 +123,23 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   circleContact : {
-    backgroundColor: 'blue',
+    backgroundColor: '#FDFCFE',
     width: 50,
-    height:50,
+    height:50, 
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius:50,
   },
   nameContact: {
-    fontSize: 8
+    fontSize: 8,
+    color: 'white'
   },
   cardContact: {
     justifyContent: 'center',
     paddingRight:5
   },
   textCircle: {
-    color: '#fff',
+    color: '#000',
   },
   container: {
     backgroundColor:'purple',
@@ -126,6 +177,10 @@ const styles = StyleSheet.create({
     width:'30%',
   },
   cardText: {
+    paddingTop:10,
     color:'#fff',
+  },
+  deleteContact: {
+
   }
 })

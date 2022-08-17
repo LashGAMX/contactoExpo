@@ -2,23 +2,67 @@ import React, { useEffect, useState } from 'react';
 import { Text, View, StyleSheet, FlatList,Alert } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Contacts from 'expo-contacts';
+import * as SQLite from "expo-sqlite"
+// import SearchBar from "react-native-dynamic-search-bar";
 
 //? Icons
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-function checkCountContact() {
-  
+function openDatabase() {
+  if (Platform.OS === "web") {
+    return {
+      transaction: () => {
+        return {
+          executeSql: () => {},
+        };
+      },
+    };
+  }
+
+  const db = SQLite.openDatabase("db.db");
+  return db;
 }
+
+const db = openDatabase();
+
+
 
 function AddContacto() {
   const [contactos, setContactos] = useState()
-  const [temp,setTemp] = useState()
+  const [temp,setTemp] = useState(0)
+  const [sw,setSw] = useState(0)
 
+  // const searchContacto = () {
+
+  // }
+
+  const add = (id,name,tel) => {
+    db.transaction(
+      (tx) => {
+        tx.executeSql("select * from contactos", [], (_, { rows }) => setSw(rows.length) )
+        console.log("size:"+sw)
+        if(sw >= 3){ 
+          alert("Solo puedes tener una maximo de 4 contactos")
+          return false
+        } else{
+          try {
+            tx.executeSql("insert into contactos (id_cont, name, telefono) values (?, ? ,?)", [id,name,tel]);
+            tx.executeSql("select * from contactos", [], (_, { rows }) =>
+              console.log(JSON.stringify(rows)) 
+            );
+            alert("Datos guardados")
+          } catch (error) {
+            alert("Error: "+error)
+          }
+        }
+      },    
+    ); 
+  }; 
   const storeData = (id,name,tel) => {
     try {
       const obj = {
         id: id,
-        name: name,
+        name: name, 
         tel: tel,
       }
       let sw = false;
@@ -31,12 +75,7 @@ function AddContacto() {
           }
         }
       } 
-      // if(sw != true){
-        // const jsonValue = JSON.stringify(obj)
-      //   AsyncStorage.setItem('contactos', jsonValue)
-      //   alert("Contacto guardado!")
-      // }
-    
+
     } catch (error) {
       alert('Error: ' + error.message);
     }
@@ -50,12 +89,12 @@ function AddContacto() {
        
     }
 }
-
+ 
   useEffect(() => {
     (async () => {
       const { status } = await Contacts.requestPermissionsAsync();
       if (status === 'granted') {
-        const { data } = await Contacts.getContactsAsync({
+        const { data } = await Contacts.getContactsAsync({ 
           fields: [Contacts.Fields.PhoneNumbers],
         });
 
@@ -68,13 +107,16 @@ function AddContacto() {
     getCheckData()
   }, []);
 
-  return (
+  return ( 
     <View style={styles.container}>
       <View style={styles.card}>
         <View
           style={styles.cardHeader}
         >
           <Text style={styles.titleHeader}>Contactos de confianza</Text>
+        </View>
+        <View>
+
         </View>
         <View style={styles.cardBody}>
           <FlatList
@@ -85,14 +127,14 @@ function AddContacto() {
               return (
                 <View>
                   <View style={{flexDirection: 'row'}}>
-                    <View style={styles.cuadro}><Text style={{fontSize:25,fontWeight: 'bold'}}>{item.name[0]}</Text></View>
+                    <View style={styles.cuadro}><Text style={{fontSize:25,fontWeight: 'bold',color: '#330326'}}>{item.name[0]}</Text></View>
                     <View style={{width:'70%'}}> 
-                      <Text style={{ fontSize: 20, fontWeight: 'bold',alignItems: 'center'   }}>
+                      <Text style={{ fontSize: 15, fontWeight: 'bold',alignItems: 'center',paddingLeft:10,   }}>
                         {item.name}
                       </Text>
                     </View>
                     <View>
-                      <MaterialCommunityIcons name="plus" size={30} color="green" onPress={() => storeData(item.id,item.name,item.phoneNumbers[0].number)} />
+                      <MaterialCommunityIcons name="plus" size={50} color="#608970" onPress={() => add(item.id,item.name,item.phoneNumbers[0].number)} />
                     </View>
                   </View>
                 </View>
@@ -107,11 +149,15 @@ function AddContacto() {
 
 export default AddContacto
 
+
+function useForceUpdate() {
+  const [value, setValue] = useState(0);
+  return [() => setValue(value + 1), value];
+}
 //! Styles
 
 const styles = StyleSheet.create({
   listaContacts: {
-    backgroundColor: '#f9c2ff',
     width: '100%',
     height: 500,
     padding: 20,
@@ -122,7 +168,7 @@ const styles = StyleSheet.create({
     flex: 1, // Permite sobreposicioar elementos
   },
   card: {
-    backgroundColor: '#C496F5',
+    backgroundColor: '#C3ADD9',
     marginTop: '20%',
     width: '90%',
     height: '80%',
@@ -136,7 +182,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     marginTop: 0,
   },
-  titleHeader: {
+  titleHeader: { 
     fontSize: 25,
   },
   cardBody: {
@@ -156,7 +202,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   cuadro: {
-    backgroundColor: 'red',
+    backgroundColor: '#A15A97',
     width: 50,
     height: 50,
     justifyContent: 'center',
