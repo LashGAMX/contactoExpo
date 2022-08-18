@@ -1,8 +1,8 @@
+
 import React, {useEffect,useState, useCallback} from 'react';
 import {Text,StyleSheet, TouchableOpacity,View} from 'react-native'
 import { NavigationContainer, useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as SQLite from "expo-sqlite"
-import sql from '../utils/db'
 import { Octicons } from '@expo/vector-icons';
 
 //? Icons
@@ -19,7 +19,7 @@ function openDatabase() {
   }
 
   const db = SQLite.openDatabase("db.db");
-  return db;
+  return db; 
 }
 function cardContactos(status) {
   const [items, setItems] = useState([]);

@@ -3,25 +3,10 @@ import { Text, View, StyleSheet, FlatList,Alert } from 'react-native'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Contacts from 'expo-contacts';
 import * as SQLite from "expo-sqlite"
-// import SearchBar from "react-native-dynamic-search-bar";
+import { openDatabase } from '../utils/Db';
 
 //? Icons
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-
-function openDatabase() {
-  if (Platform.OS === "web") {
-    return {
-      transaction: () => {
-        return {
-          executeSql: () => {},
-        };
-      },
-    };
-  }
-
-  const db = SQLite.openDatabase("db.db");
-  return db;
-}
 
 const db = openDatabase();
 
@@ -29,14 +14,10 @@ const db = openDatabase();
 
 function AddContacto() {
   const [contactos, setContactos] = useState()
-  const [temp,setTemp] = useState(0)
   const [sw,setSw] = useState(0)
 
-  // const searchContacto = () {
 
-  // }
-
-  const add = (id,name,tel) => {
+  const add = (id,name,tel) => {  
     db.transaction(
       (tx) => {
         tx.executeSql("select * from contactos", [], (_, { rows }) => setSw(rows.length) )
@@ -45,7 +26,7 @@ function AddContacto() {
           alert("Solo puedes tener una maximo de 4 contactos")
           return false
         } else{
-          try {
+           try {
             tx.executeSql("insert into contactos (id_cont, name, telefono) values (?, ? ,?)", [id,name,tel]);
             tx.executeSql("select * from contactos", [], (_, { rows }) =>
               console.log(JSON.stringify(rows)) 
@@ -58,38 +39,7 @@ function AddContacto() {
       },    
     ); 
   }; 
-  const storeData = (id,name,tel) => {
-    try {
-      const obj = {
-        id: id,
-        name: name, 
-        tel: tel,
-      }
-      let sw = false;
-      if(temp != null) {
-        for (let i = 0; i < 4; i++) {
-          if(temp[i].id == id){
-            alert("Ya esta registrado")
-          }else{
-            console.log("Else")
-          }
-        }
-      } 
 
-    } catch (error) {
-      alert('Error: ' + error.message);
-    }
-  } 
-  const getCheckData = async (key) => {
-    try { 
-      let data = await AsyncStorage.getItem("contactos") 
-      setTemp(JSON.parse(data))
-      console.log(temp)
-    } catch (error) {
-       
-    }
-}
- 
   useEffect(() => {
     (async () => {
       const { status } = await Contacts.requestPermissionsAsync();
@@ -99,12 +49,11 @@ function AddContacto() {
         });
 
         if (data.length > 0) {
-          // console.log(data)
+
           setContactos(data)
         }
       }
     })();
-    getCheckData()
   }, []);
 
   return ( 
@@ -134,7 +83,7 @@ function AddContacto() {
                       </Text>
                     </View>
                     <View>
-                      <MaterialCommunityIcons name="plus" size={50} color="#608970" onPress={() => add(item.id,item.name,item.phoneNumbers[0].number)} />
+                      <MaterialCommunityIcons name="plus" size={50} color="#608970" onPress={() => add(item.id,item.firstName,item.phoneNumbers[0].number)} />
                     </View>
                   </View>
                 </View>
